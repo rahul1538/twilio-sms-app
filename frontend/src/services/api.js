@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/messages",
+  baseURL:" https://twilio-sms-app-5.onrender.com",
 });
 
 export const sendSMS = (data) => API.post("/send", data);
