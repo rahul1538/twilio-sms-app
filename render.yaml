@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: twilio-backend
+    env: node
+    region: oregon
+    buildCommand: "cd backend && npm install"
+    startCommand: "cd backend && npm start"
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: TWILIO_SID
+        sync: false
+      - key: TWILIO_AUTH
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: MONGO_URI
+        sync: false
