@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // IMPORTANT: The BASE URL MUST include the route prefix defined in your backend's app.js
-const API_BASE_URL = "http://localhost:5000/api/messages"; 
+const API_BASE_URL = "https://twilio-sms-app-funk.onrender.com"; 
 
 const API = axios.create({
   baseURL: API_BASE_URL,
