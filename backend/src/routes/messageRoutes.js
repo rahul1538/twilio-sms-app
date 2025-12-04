@@ -1,9 +1,30 @@
-    const express = require("express");
-    const { sendMessage, getMessages } = require("../controllers/messageController");
+const express = require("express");
+const {
+  sendMessage,
+  getMessages,
+  getMessageById,
+  updateMessage,
+  deleteMessage,
+} = require("../controllers/messageController");
 
-    const router = express.Router();
+const router = express.Router();
 
-    router.post("/send", sendMessage);   // send sms
-    router.get("/", getMessages);        // get message list
+// 🧪 Test Route
+router.get("/test", (req, res) => {
+  res.json({ success: true, message: "Message API Working ✔" });
+});
 
-    module.exports = router;
+// CREATE
+router.post("/send", sendMessage);
+
+// READ
+router.get("/", getMessages);
+router.get("/:id", getMessageById);
+
+// UPDATE
+router.put("/:id", updateMessage);
+
+// DELETE
+router.delete("/:id", deleteMessage);
+
+module.exports = router;

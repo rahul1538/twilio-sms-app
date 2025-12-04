@@ -1,25 +1,57 @@
 import React, { useState } from "react";
-import { sendSMS } from "../services/api";
 import toast from "react-hot-toast";
+import { sendSMS } from "../services/api"; // Import the API function
 
-export default function SendSMSForm() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [text, setText] = useState("");
+// Your static Twilio number from the backend's .env file
+const TWILIO_FROM_NUMBER = "+17753078165"; 
+
+export default function SendSMSForm({ onMessageSent }) {
+  const [form, setForm] = useState({
+    to: "",
+    body: "",
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!from || !to || !text) return toast.error("All fields required!");
+    if (!form.to || !form.body) {
+        toast.error("Please fill in both recipient number and message body.");
+        return;
+    }
+
+    setIsLoading(true);
 
     try {
-      await sendSMS({ from, to, text });
-      toast.success("Message sent successfully!");
-      setFrom("");
-      setTo("");
-      setText("");
-    } catch (err) {
-      toast.error("Failed to send SMS");
+      // Construct payload using the static Twilio 'from' number
+      const payload = {
+        from: TWILIO_FROM_NUMBER,
+        to: form.to,
+        body: form.body,
+      };
+
+      const response = await sendSMS(payload);
+
+      if (response.data.success) {
+        toast.success("SMS Sent Successfully!");
+        setForm({ to: "", body: "" });
+        // Call the prop function to refresh the message table
+        if (onMessageSent) onMessageSent(); 
+      } else {
+        toast.error(response.data.error || "Failed to send SMS");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        "Server Error. Check your backend server and API URL in api.js."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -27,23 +59,31 @@ export default function SendSMSForm() {
     <div className="card">
       <h2>Send SMS</h2>
       <form onSubmit={handleSubmit}>
+        {/* The 'from' number is automatically sent via TWILIO_FROM_NUMBER constant */}
+        <p className="twili-info">
+          **Sending from:** {TWILIO_FROM_NUMBER} (Your Twilio Number)
+        </p>
+
         <input
-          placeholder="Your Twilio Number"
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
+          type="text"
+          name="to"
+          placeholder="Recipient Number (e.g., +1234567890)"
+          value={form.to}
+          onChange={handleChange}
+          required
         />
-        <input
-          placeholder="Recipient Number"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-        />
+
         <textarea
-          rows="4"
-          placeholder="Message..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit">Send Message</button>
+          name="body"
+          placeholder="Message Body"
+          value={form.body}
+          onChange={handleChange}
+          required
+        ></textarea>
+
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Sending..." : "Send Message"}
+        </button>
       </form>
     </div>
   );

@@ -1,57 +1,68 @@
 import React, { useEffect, useState } from "react";
 import { getMessages } from "../services/api";
 
-export default function MessageTable() {
-  const [messages, setMessages] = useState([]);
+// Utility function for formatting date/time
+const formatTime = (dateString) => {
+  return new Date(dateString).toLocaleString();
+};
 
-  const loadMessages = async () => {
+export default function MessageTable({ refreshKey }) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchMessages = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await getMessages();
-      setMessages(res.data);
+      const response = await getMessages();
+      // The backend returns { success: true, data: [...] }
+      if (response.data.success) { 
+        setMessages(response.data.data);
+      } else {
+        setError("Failed to fetch messages: " + (response.data.error || "Unknown error"));
+      }
     } catch (err) {
-      console.error("Error fetching messages", err);
+      console.error("Fetch Error:", err);
+      setError("Connection error. Ensure the backend is running and the API URL is correct.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMessages(); // load immediately
+    fetchMessages();
+  }, [refreshKey]); // refreshKey is used to trigger a refetch after sending a message
 
-    const interval = setInterval(() => {
-      loadMessages();
-    }, 5000); // auto-refresh every 5 seconds
-
-    return () => clearInterval(interval); // clean up on unmount
-  }, []);
+  if (loading) return <div className="card"><p>Loading message history...</p></div>;
+  if (error) return <div className="card error-message"><p>{error}</p></div>;
+  if (messages.length === 0) return <div className="card"><p>No messages found in history.</p></div>;
 
   return (
     <div className="card">
-      <h2>Message History (Auto-Refresh 🔄)</h2>
+      <h2>📨 Message History</h2>
+
       <table>
         <thead>
           <tr>
             <th>From</th>
             <th>To</th>
             <th>Message</th>
-            <th>Date</th>
+            <th>Status</th>
+            <th>Time</th>
           </tr>
         </thead>
+
         <tbody>
-          {messages.length === 0 ? (
-            <tr>
-              <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>
-                No messages yet...
-              </td>
+          {messages.map((msg) => (
+            <tr key={msg._id} className={msg.status.toLowerCase()}>
+              <td>{msg.from}</td>
+              <td>{msg.to}</td>
+              <td>{msg.body}</td>
+              <td>{msg.status}</td>
+              <td>{formatTime(msg.createdAt)}</td>
             </tr>
-          ) : (
-            messages.map((msg) => (
-              <tr key={msg._id}>
-                <td>{msg.from}</td>
-                <td>{msg.to}</td>
-                <td>{msg.text}</td>
-                <td>{new Date(msg.date).toLocaleString()}</td>
-              </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
     </div>

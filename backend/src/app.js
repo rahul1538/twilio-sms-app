@@ -10,8 +10,7 @@ const app = express();
 // Middleware
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://twilio-sms-app-frontend.onrender.com",
-  "https://twilio-sms-app.onrender.com"
+ 
 ];
 
 app.use(cors({
